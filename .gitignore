@@ -1,0 +1,11 @@
+# Chesspresso library
+Chesspresso-lib.jar
+
+# Class files
+bin
+
+# Metadata
+.classpath
+.project
+.settings/
+
