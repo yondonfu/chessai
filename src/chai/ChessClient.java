@@ -120,8 +120,22 @@ public class ChessClient extends Application {
 				mover.start(game.position);
 			} else if (mover.getState() == Worker.State.SUCCEEDED
 					&& boardView.ready()) {
+				System.out.println("Player: " + game.position.getToPlay());
 				short move = mover.getMove();
 				boardView.doMove(move);
+				
+				if (game.position.isMate()) {
+					if (game.position.getToPlay() == 0) {
+						System.out.println("Player 0 Wins");
+					} else {
+						System.out.println("Player 1 Wins");
+					}
+				}
+				
+				if (game.position.isStaleMate()) {
+					System.out.println("Draw");
+				}
+				
 				mover.reset();
 			}
 
