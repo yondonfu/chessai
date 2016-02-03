@@ -6,7 +6,7 @@ import chesspresso.move.IllegalMoveException;
 import chesspresso.position.Position;
 
 public class MiniMaxAI implements ChessAI {
-	public static final int MAXDEPTH = 3;
+	public static final int MAXDEPTH = 4;
 	
 	public short getMove(Position position) {
 		return IDMiniMax(position, MAXDEPTH);
@@ -31,6 +31,7 @@ public class MiniMaxAI implements ChessAI {
 	public MoveWrapper maxValue(Position position, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position));
+//			return new MoveWrapper(position.getLastShortMove(), evaluate(position));
 		}
 		
 		MoveWrapper bestMax = new MoveWrapper((short) -1, Integer.MIN_VALUE);
@@ -38,11 +39,14 @@ public class MiniMaxAI implements ChessAI {
 		for (short move : moves) {
 			try {
 				position.doMove(move);
-				MoveWrapper minMove = minValue(position, depth + 1, maxDepth);
 				
-				// Maximize utility
-				if (bestMax.utility < minMove.utility) {
-					bestMax = minMove;
+				if (position.isLegal()) {
+					MoveWrapper minMove = minValue(position, depth + 1, maxDepth);
+					
+					// Maximize utility
+					if (bestMax.utility < minMove.utility) {
+						bestMax = minMove;
+					}
 				}
 				
 				// Undo move for next iteration
@@ -60,6 +64,7 @@ public class MiniMaxAI implements ChessAI {
 	public MoveWrapper minValue(Position position, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position));
+//			return new MoveWrapper(position.getLastShortMove(), evaluate(position));
 		}
 		
 		MoveWrapper bestMin = new MoveWrapper((short) -1, Integer.MAX_VALUE);
@@ -67,11 +72,14 @@ public class MiniMaxAI implements ChessAI {
 		for (short move : moves) {
 			try {
 				position.doMove(move);
-				MoveWrapper maxMove = maxValue(position, depth + 1, maxDepth);
 				
-				// Minimize utility
-				if (bestMin.utility > maxMove.utility) {
-					bestMin = maxMove;
+				if (position.isLegal()) {
+					MoveWrapper maxMove = maxValue(position, depth + 1, maxDepth);
+					
+					// Minimize utility
+					if (bestMin.utility > maxMove.utility) {
+						bestMin = maxMove;
+					}
 				}
 				
 				// Undo move for next iteration
