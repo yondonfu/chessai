@@ -25,7 +25,7 @@ public class ChessClient extends Application {
 	private static final String welcomeMessage = 
 			"Welcome to CS 76 chess.  Moves can be made using algebraic notation;"
 			+ " for example the command c2c3 would move the piece at c2 to c3.  \n";
-		
+	private static final String aiType = "MINIMAX"; // RANDOM, MINIMAX, AB
 	
 	TextField commandField;
 	TextArea logArea;
@@ -73,8 +73,25 @@ public class ChessClient extends Application {
 		// Movemakers handle getting input from an AI, from the keyboard, or
 		// from a server, depending on which type is used.
 		moveMaker = new MoveMaker[2];
-//		moveMaker[Chess.BLACK] = new AIMoveMaker(new RandomAI());
-		moveMaker[Chess.BLACK] = new AIMoveMaker(new MiniMaxAI());
+		
+		switch (aiType) {
+			case "RANDOM":
+				moveMaker[Chess.BLACK] = new AIMoveMaker(new RandomAI());
+				break;
+			
+			case "MINIMAX":
+				moveMaker[Chess.BLACK] = new AIMoveMaker(new MiniMaxAI());
+				break;
+				
+			case "AB":
+				moveMaker[Chess.BLACK] = new AIMoveMaker(new AlphaBetaAI());
+				break;
+		
+			default:
+				System.out.println("Invalid AI type");
+				break;
+		}
+
 		moveMaker[Chess.WHITE] = new TextFieldMoveMaker();
 
 		VBox vb = new VBox();

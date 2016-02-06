@@ -5,63 +5,68 @@ import java.util.Random;
 import chesspresso.move.IllegalMoveException;
 import chesspresso.position.Position;
 
-public class MiniMaxAI implements ChessAI {
+public class AlphaBetaAI implements ChessAI {
 	public static final int MAXDEPTH = 4;
 	
 	private int playerNum;
-	private int visitedStates;
 	
 	@Override
 	public short getMove(Position position) {
 		playerNum = position.getToPlay();
-		visitedStates = 0;
 		
-		return IDMiniMax(position, MAXDEPTH);
+		return IDAB(position, MAXDEPTH);
 	}
 	
-	public short IDMiniMax(Position position, int maxDepth) {
-		MoveWrapper bestMove = new MoveWrapper((short) 0, Integer.MIN_VALUE);
+	public short IDAB(Position position, int maxDepth) {
+		MoveWrapper bestMove = new MoveWrapper((short) -1, Integer.MIN_VALUE);
 		for (int i = 0; i < maxDepth; i++) {
-			MoveWrapper currMove = depthLimitedMiniMax(position, i);
+			MoveWrapper currMove = depthLimitedABSearch(position, i);
 			if (currMove.utility > bestMove.utility) {
 				bestMove = currMove;
 			}
 		}
 		
-		printStats();
 		return bestMove.move;
 	}
 	
-	public MoveWrapper depthLimitedMiniMax(Position position, int maxDepth) {
-		return maxValue(position, 0, maxDepth);
+	public MoveWrapper depthLimitedABSearch(Position position, int maxDepth) {
+		return maxValue(position, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, maxDepth);
 	}
 	
-	public MoveWrapper maxValue(Position position, int depth, int maxDepth) {
+	public MoveWrapper maxValue(Position position, int alpha, int beta, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position));
 //			return new MoveWrapper(position.getLastShortMove(), evaluate(position));
 		}
 		
-		MoveWrapper bestMax = new MoveWrapper((short) 0, Integer.MIN_VALUE);
+		MoveWrapper bestMax = new MoveWrapper((short) -1, Integer.MIN_VALUE);
 		short[] moves = position.getAllMoves();
 		for (short move : moves) {
 			try {
 				position.doMove(move);
 				
-				visitedStates++;
-				
 				if (position.isLegal()) {
-					MoveWrapper minMove = minValue(position, depth + 1, maxDepth);
+					MoveWrapper minMove = minValue(position, alpha, beta, depth + 1, maxDepth);
 					
 					// Maximize utility
 					if (bestMax.utility < minMove.utility) {
 						bestMax.utility = minMove.utility;
 						bestMax.move = minMove.move;
 					}
+					
+					// Undo move for next iteration
+					position.undoMove();
+					
+					if (bestMax.utility >= beta) {
+						return bestMax;
+					}
+					
+					// Set alpha to move with highest utility thus far
+					alpha = Math.max(alpha, bestMax.utility);
+				} else {
+					position.undoMove();
 				}
 				
-				// Undo move for next iteration
-				position.undoMove();
 			} catch (IllegalMoveException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -72,7 +77,7 @@ public class MiniMaxAI implements ChessAI {
 		return bestMax;
 	}
 	
-	public MoveWrapper minValue(Position position, int depth, int maxDepth) {
+	public MoveWrapper minValue(Position position, int alpha, int beta, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position));
 //			return new MoveWrapper(position.getLastShortMove(), evaluate(position));
@@ -84,20 +89,28 @@ public class MiniMaxAI implements ChessAI {
 			try {
 				position.doMove(move);
 				
-				visitedStates++;
-				
 				if (position.isLegal()) {
-					MoveWrapper maxMove = maxValue(position, depth + 1, maxDepth);
+					MoveWrapper maxMove = maxValue(position, alpha, beta, depth + 1, maxDepth);
 					
 					// Minimize utility
 					if (bestMin.utility > maxMove.utility) {
 						bestMin.utility = maxMove.utility;
 						bestMin.move = maxMove.move;
 					}
+					
+					// Undo move for next iteration
+					position.undoMove();
+					
+					if (bestMin.utility <= alpha) {
+						return bestMin;
+					}
+					
+					// Set beta to move with lowest utility thus far
+					beta = Math.min(beta, bestMin.utility);
+				} else {
+					position.undoMove();
 				}
-				
-				// Undo move for next iteration
-				position.undoMove();
+		
 			} catch (IllegalMoveException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -129,19 +142,12 @@ public class MiniMaxAI implements ChessAI {
 			// Cut off search early
 			return evaluate(position);
 		}
-		
 	}
 	
 	public int evaluate(Position position) {
-		if (position.getToPlay() == playerNum) {
-			return -1 * position.getMaterial();
-		} else {
-			return position.getMaterial();
-		}
-	}
-	
-	public void printStats() {
-		System.out.println("Visited states: " + visitedStates);
+		// getMaterial() and getDomination() will both return either positive or negative values
+		// based on which piece has to play
+		return position.getMaterial() + ((int) position.getDomination());
 	}
 	
 	/*
