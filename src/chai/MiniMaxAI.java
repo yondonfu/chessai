@@ -6,12 +6,11 @@ import chesspresso.move.IllegalMoveException;
 import chesspresso.position.Position;
 
 public class MiniMaxAI implements ChessAI {
-	public static final int MAXDEPTH = 4;
+	public static final int MAXDEPTH = 5;
 	
 	private int playerNum;
 	private int visitedStates;
 	
-	@Override
 	public short getMove(Position position) {
 		playerNum = position.getToPlay();
 		visitedStates = 0;
@@ -20,13 +19,23 @@ public class MiniMaxAI implements ChessAI {
 	}
 	
 	public short IDMiniMax(Position position, int maxDepth) {
+		System.out.println("ID called for Player " + playerNum);
 		MoveWrapper bestMove = new MoveWrapper((short) 0, Integer.MIN_VALUE);
-		for (int i = 0; i < maxDepth; i++) {
+		for (int i = 0; i <= maxDepth; i++) {
+			System.out.println("Player " + playerNum + " on depth level " + i);
 			MoveWrapper currMove = depthLimitedMiniMax(position, i);
 			if (currMove.utility > bestMove.utility) {
+				System.out.println("Player " + playerNum + " found better move at depth: " + i);
+				System.out.println("New utility: " + currMove.utility);
 				bestMove = currMove;
 			}
+			if (bestMove.utility == Integer.MAX_VALUE) {
+				System.out.println("Finished ID early");
+				return bestMove.move;
+			}
 		}
+		
+		System.out.println("Finished ID");
 		
 		printStats();
 		return bestMove.move;
@@ -39,7 +48,6 @@ public class MiniMaxAI implements ChessAI {
 	public MoveWrapper maxValue(Position position, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position));
-//			return new MoveWrapper(position.getLastShortMove(), evaluate(position));
 		}
 		
 		MoveWrapper bestMax = new MoveWrapper((short) 0, Integer.MIN_VALUE);
@@ -56,7 +64,7 @@ public class MiniMaxAI implements ChessAI {
 					// Maximize utility
 					if (bestMax.utility < minMove.utility) {
 						bestMax.utility = minMove.utility;
-						bestMax.move = minMove.move;
+						bestMax.move = move;
 					}
 				}
 				
@@ -75,10 +83,9 @@ public class MiniMaxAI implements ChessAI {
 	public MoveWrapper minValue(Position position, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position));
-//			return new MoveWrapper(position.getLastShortMove(), evaluate(position));
 		}
 		
-		MoveWrapper bestMin = new MoveWrapper((short) -1, Integer.MAX_VALUE);
+		MoveWrapper bestMin = new MoveWrapper((short) 0, Integer.MAX_VALUE);
 		short[] moves = position.getAllMoves();
 		for (short move : moves) {
 			try {
@@ -92,7 +99,7 @@ public class MiniMaxAI implements ChessAI {
 					// Minimize utility
 					if (bestMin.utility > maxMove.utility) {
 						bestMin.utility = maxMove.utility;
-						bestMin.move = maxMove.move;
+						bestMin.move = move;
 					}
 				}
 				
@@ -108,36 +115,33 @@ public class MiniMaxAI implements ChessAI {
 	}
 	
 	public int getUtility(Position position) {
-		if (position.isTerminal()) {
-			if (position.isMate()) {
-				if (position.getToPlay() == playerNum) {
-					// AI loses
-					return Integer.MIN_VALUE;
-				} else {
-					// AI wins
-					return Integer.MAX_VALUE;
-				}
-			} else if (position.isStaleMate()) {
-				return 0;
+		if (position.isMate()) {
+			if (position.getToPlay() == playerNum) {
+				// AI loses
+				return Integer.MIN_VALUE;
 			} else {
-				// Other state beside a draw or a checkmate
-//				Random r =  new Random();
-//				return r.nextInt();
-				return evaluate(position);
+				// AI wins
+				return Integer.MAX_VALUE;
 			}
+		} else if (position.isStaleMate()) {
+			return 0;
 		} else {
 			// Cut off search early
+//			Random r =  new Random();
+//			return r.nextInt();
 			return evaluate(position);
 		}
 		
 	}
 	
 	public int evaluate(Position position) {
+//		return (int) position.getDomination();
 		if (position.getToPlay() == playerNum) {
-			return -1 * position.getMaterial();
-		} else {
 			return position.getMaterial();
+		} else {
+			return -1 * position.getMaterial();
 		}
+		
 	}
 	
 	public void printStats() {
