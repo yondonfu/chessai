@@ -25,7 +25,9 @@ public class ChessClient extends Application {
 	private static final String welcomeMessage = 
 			"Welcome to CS 76 chess.  Moves can be made using algebraic notation;"
 			+ " for example the command c2c3 would move the piece at c2 to c3.  \n";
-	private static final String aiType = "MINIMAX"; // RANDOM, MINIMAX, AB
+	private static final String aiType = "AB"; // RANDOM, MINIMAX, AB
+	private static final String gameType = "CvC"; // HvC, CvC, HvH
+	private static final boolean openingGame = false;
 	
 	TextField commandField;
 	TextArea logArea;
@@ -84,15 +86,28 @@ public class ChessClient extends Application {
 				break;
 				
 			case "AB":
-				moveMaker[Chess.BLACK] = new AIMoveMaker(new AlphaBetaAI());
+				moveMaker[Chess.BLACK] = new AIMoveMaker(new AlphaBetaAI(openingGame));
 				break;
 		
 			default:
 				System.out.println("Invalid AI type");
 				break;
 		}
-
-		moveMaker[Chess.WHITE] = new TextFieldMoveMaker();
+		
+		switch (gameType) {
+			case "CvC":
+				moveMaker[Chess.WHITE] = new AIMoveMaker(new AlphaBetaAI(openingGame));
+				break;
+			case "HvC":
+				moveMaker[Chess.WHITE] = new TextFieldMoveMaker();
+				break;
+			case "HvH":
+				moveMaker[Chess.WHITE] = new TextFieldMoveMaker();
+				break;
+			default:
+				System.out.println("Invalid game type");
+				break;
+		}
 
 		VBox vb = new VBox();
 		vb.getChildren().addAll(boardView, logArea, commandField);
@@ -144,9 +159,9 @@ public class ChessClient extends Application {
 				
 				if (game.position.isMate()) {
 					if (game.position.getToPlay() == 0) {
-						System.out.println("Player 0 Wins");
-					} else {
 						System.out.println("Player 1 Wins");
+					} else {
+						System.out.println("Player 0 Wins");
 					}
 				}
 				

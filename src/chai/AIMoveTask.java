@@ -17,7 +17,7 @@ public class AIMoveTask extends Task<Short> {
 
 	@Override
 	protected Short call() throws Exception {
-		return ai.getMove(position);
+		return ai.getMove(new Position(position));
 	
 	}
 	

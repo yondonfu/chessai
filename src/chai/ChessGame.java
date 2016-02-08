@@ -13,8 +13,18 @@ public class ChessGame {
 	public int columns = 8;
 
 	public ChessGame() {
+		// Original full game
 		position = new Position(
 				"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		// Black wins in 3
+//		position = new Position(
+//				"r5k1/p3Qpbp/2p3p1/1p6/q3bN2/6PP/PP3P2/K2RR3 b - - 0 1");
+		// Black wins in 3
+//		position = new Position(
+//				"6k1/Q4pp1/2pq2rp/3p2n1/4r3/2PN4/P4PPP/2R2R1K b - - 0 1");
+		// Black wins in 3
+//		position = new Position(
+//				"8/4B2p/7n/4pqpk/P2n1b2/R3P2P/2r3P1/1Q3R1K b - - 0 1");
 
 	}
 
