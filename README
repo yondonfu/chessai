@@ -1,0 +1,22 @@
+Chess AI - CS76
+
+Chess game can be played with two computers or a computer an a human.
+To play with two computers set the gameType variable in ChessClient.java to "CvC"
+To play with a human and a computer set the gameType variable in ChessClient.java to "HvC"
+
+If a chess game is played with a computer, the computer can use the following AIs: RandomAI, MiniMaxAI, AlphaBetaAI, SuperAlphaBetaAI
+RandomAI chooses moves randomly
+MiniMaxAI uses the minimax search algorithm
+AlphaBetaAI uses the alpha-beta pruning technique along with a transposition table to improve search speed
+SuperAlphaBetaAI is an extension of AlphaBetaAI that uses move reordering techniques to improve pruning and speed
+
+To play with RandomAI set the aiType variable in ChessClient.java to "RANDOM"
+To play with MiniMaxAI set the aiType variable in ChessClient.java to "MINIMAX"
+To play with AlphaBetaAI set the aiType variable in ChessClient.java to "AB"
+To play with SuperAlphaBetaAI set the aiType variable in ChessClient.java to "SUPER"
+
+If a chess game is played with either AlphaBetaAI or SuperAlphaBetaAI, the computer can use an opening book
+To enable the opening book set the openingGame variable in ChessClient.java to true
+To disable the opening book set the openingGame variable in ChessClient.java to false
+
+To use different starting positions, see the constructor for ChessGame.java
