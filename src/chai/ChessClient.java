@@ -25,7 +25,7 @@ public class ChessClient extends Application {
 	private static final String welcomeMessage = 
 			"Welcome to CS 76 chess.  Moves can be made using algebraic notation;"
 			+ " for example the command c2c3 would move the piece at c2 to c3.  \n";
-	private static final String aiType = "MINIMAX"; // RANDOM, MINIMAX, AB, SUPER
+	private static final String aiType = "AB"; // RANDOM, MINIMAX, AB, SUPER
 	private static final String gameType = "CvC"; // HvC, CvC, HvH
 	private static final boolean openingGame = false;
 	
