@@ -25,7 +25,7 @@ public class ChessClient extends Application {
 	private static final String welcomeMessage = 
 			"Welcome to CS 76 chess.  Moves can be made using algebraic notation;"
 			+ " for example the command c2c3 would move the piece at c2 to c3.  \n";
-	private static final String aiType = "AB"; // RANDOM, MINIMAX, AB
+	private static final String aiType = "MINIMAX"; // RANDOM, MINIMAX, AB, SUPER
 	private static final String gameType = "CvC"; // HvC, CvC, HvH
 	private static final boolean openingGame = false;
 	
@@ -37,6 +37,8 @@ public class ChessClient extends Application {
 	// RandomMoveSource[] playerMoveSources;
 
 	MoveMaker[] moveMaker;
+	
+	Timeline timeline;
 
 	public static void main(String[] args) {
 
@@ -79,16 +81,32 @@ public class ChessClient extends Application {
 		switch (aiType) {
 			case "RANDOM":
 				moveMaker[Chess.BLACK] = new AIMoveMaker(new RandomAI());
+				if (gameType == "CvC") {
+					moveMaker[Chess.WHITE] = new AIMoveMaker(new RandomAI());
+				}
 				break;
 			
 			case "MINIMAX":
 				moveMaker[Chess.BLACK] = new AIMoveMaker(new MiniMaxAI());
+				if (gameType == "CvC") {
+					moveMaker[Chess.WHITE] = new AIMoveMaker(new MiniMaxAI());
+				}
 				break;
 				
 			case "AB":
 				moveMaker[Chess.BLACK] = new AIMoveMaker(new AlphaBetaAI(openingGame));
+				if (gameType == "CvC") {
+					moveMaker[Chess.WHITE] = new AIMoveMaker(new AlphaBetaAI(openingGame));
+				}
 				break;
-		
+				
+			case "SUPER":
+				moveMaker[Chess.BLACK] = new AIMoveMaker(new SuperAlphaBetaAI(openingGame));
+				if (gameType == "CvC") {
+					moveMaker[Chess.WHITE] = new AIMoveMaker(new SuperAlphaBetaAI(openingGame));
+				}
+				break;
+				
 			default:
 				System.out.println("Invalid AI type");
 				break;
@@ -96,7 +114,7 @@ public class ChessClient extends Application {
 		
 		switch (gameType) {
 			case "CvC":
-				moveMaker[Chess.WHITE] = new AIMoveMaker(new AlphaBetaAI(openingGame));
+				// Already handled by switch statement above
 				break;
 			case "HvC":
 				moveMaker[Chess.WHITE] = new TextFieldMoveMaker();
@@ -121,7 +139,7 @@ public class ChessClient extends Application {
 		primaryStage.show();
 
 		// sets the game world's game loop (Timeline)
-		Timeline timeline = new Timeline(1.0);
+		timeline = new Timeline(1.0);
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		timeline.getKeyFrames().add(
 				new KeyFrame(Duration.seconds(.05), new GameHandler()));
@@ -163,10 +181,12 @@ public class ChessClient extends Application {
 					} else {
 						System.out.println("Player 0 Wins");
 					}
+					timeline.stop();
 				}
 				
 				if (game.position.isStaleMate()) {
 					System.out.println("Draw");
+					timeline.stop();
 				}
 				
 				mover.reset();

@@ -6,7 +6,7 @@ import chesspresso.move.IllegalMoveException;
 import chesspresso.position.Position;
 
 public class MiniMaxAI implements ChessAI {
-	public static final int MAXDEPTH = 5;
+	public static final int MAXDEPTH = 4;
 	
 	private int playerNum;
 	private int visitedStates;
@@ -19,24 +19,21 @@ public class MiniMaxAI implements ChessAI {
 	}
 	
 	public short IDMiniMax(Position position, int maxDepth) {
-		System.out.println("ID called for Player " + playerNum);
+		int maxDepthReached = 0;
 		MoveWrapper bestMove = new MoveWrapper((short) 0, Integer.MIN_VALUE);
 		for (int i = 0; i <= maxDepth; i++) {
-			System.out.println("Player " + playerNum + " on depth level " + i);
 			MoveWrapper currMove = depthLimitedMiniMax(position, i);
 			if (currMove.utility > bestMove.utility) {
-				System.out.println("Player " + playerNum + " found better move at depth: " + i);
-				System.out.println("New utility: " + currMove.utility);
+				maxDepthReached = i;
 				bestMove = currMove;
 			}
 			if (bestMove.utility == Integer.MAX_VALUE) {
-				System.out.println("Finished ID early");
-				return bestMove.move;
+				break;
 			}
 		}
 		
-		System.out.println("Finished ID");
-		
+		System.out.println("Max depth reached: " + maxDepthReached);
+		System.out.println("Best utility found: " + bestMove.utility);
 		printStats();
 		return bestMove.move;
 	}
@@ -58,14 +55,12 @@ public class MiniMaxAI implements ChessAI {
 				
 				visitedStates++;
 				
-				if (position.isLegal()) {
-					MoveWrapper minMove = minValue(position, depth + 1, maxDepth);
-					
-					// Maximize utility
-					if (bestMax.utility < minMove.utility) {
-						bestMax.utility = minMove.utility;
-						bestMax.move = move;
-					}
+				MoveWrapper minMove = minValue(position, depth + 1, maxDepth);
+				
+				// Maximize utility
+				if (bestMax.utility < minMove.utility) {
+					bestMax.utility = minMove.utility;
+					bestMax.move = move;
 				}
 				
 				// Undo move for next iteration
@@ -93,14 +88,12 @@ public class MiniMaxAI implements ChessAI {
 				
 				visitedStates++;
 				
-				if (position.isLegal()) {
-					MoveWrapper maxMove = maxValue(position, depth + 1, maxDepth);
-					
-					// Minimize utility
-					if (bestMin.utility > maxMove.utility) {
-						bestMin.utility = maxMove.utility;
-						bestMin.move = move;
-					}
+				MoveWrapper maxMove = maxValue(position, depth + 1, maxDepth);
+				
+				// Minimize utility
+				if (bestMin.utility > maxMove.utility) {
+					bestMin.utility = maxMove.utility;
+					bestMin.move = move;
 				}
 				
 				// Undo move for next iteration
@@ -135,11 +128,10 @@ public class MiniMaxAI implements ChessAI {
 	}
 	
 	public int evaluate(Position position) {
-//		return (int) position.getDomination();
 		if (position.getToPlay() == playerNum) {
-			return position.getMaterial();
+			return position.getMaterial() + (int) position.getDomination();
 		} else {
-			return -1 * position.getMaterial();
+			return -1 * position.getMaterial() + (int) position.getDomination();
 		}
 		
 	}

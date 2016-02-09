@@ -1,13 +1,16 @@
 package chai;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 import chesspresso.move.IllegalMoveException;
 import chesspresso.move.Move;
 import chesspresso.position.Position;
 
-public class AlphaBetaAI implements ChessAI {
+public class SuperAlphaBetaAI implements ChessAI {
 	public static final int MAXDEPTH = 5;
 	
 	private int playerNum;
@@ -20,7 +23,7 @@ public class AlphaBetaAI implements ChessAI {
 	private OpeningBook openingBook;
 	private boolean isOpeningMove;
 	
-	public AlphaBetaAI(boolean fullGame) {
+	public SuperAlphaBetaAI(boolean fullGame) {
 		transTable = new HashMap<Integer, TableNode>();
 		openingBook = new OpeningBook("book.pgn");
 		isOpeningMove = fullGame;
@@ -44,7 +47,7 @@ public class AlphaBetaAI implements ChessAI {
 		int maxDepthReached = 0;
 		MoveWrapper bestMove = new MoveWrapper((short) 0, Integer.MIN_VALUE);
 		for (int i = 1; i <= maxDepth; i++) {
-			MoveWrapper currMove = depthLimitedABSearch(position, i);
+			MoveWrapper currMove = depthLimitedABSearch(position, bestMove, i);
 			if (currMove.utility > bestMove.utility) {
 				maxDepthReached = i;
 				bestMove = currMove;
@@ -60,17 +63,19 @@ public class AlphaBetaAI implements ChessAI {
 		return bestMove.move;
 	}
 	
-	public MoveWrapper depthLimitedABSearch(Position position, int maxDepth) {
-		return maxValue(position, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, maxDepth);
+	public MoveWrapper depthLimitedABSearch(Position position, MoveWrapper bestMove, int maxDepth) {
+		return maxValue(position, bestMove, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, maxDepth);
 	}
 	
-	public MoveWrapper maxValue(Position position, int alpha, int beta, int depth, int maxDepth) {
+	public MoveWrapper maxValue(Position position, MoveWrapper bestMove, int alpha, int beta, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position, depth));
 		}
 		
-		MoveWrapper bestMax = new MoveWrapper((short) 0, Integer.MIN_VALUE);
+		MoveWrapper bestMax = new MoveWrapper(bestMove.move, bestMove.utility);
 		short[] moves = position.getAllMoves();
+		sortMoves(moves);
+		
 		for (short move : moves) {
 			try {
 				position.doMove(move);
@@ -84,7 +89,7 @@ public class AlphaBetaAI implements ChessAI {
 						minMove = new MoveWrapper(move, prevScore);
 					} else {
 						visitedStates++;
-						minMove = minValue(position, alpha, beta, depth + 1, maxDepth);
+						minMove = minValue(position, new MoveWrapper((short) 0, Integer.MAX_VALUE), alpha, beta, depth + 1, maxDepth);
 						
 						if (minMove.utility <= alpha) {
 							transTable.put(position.hashCode(), new TableNode(minMove.utility, maxDepth - depth, ScoreType.UPPER));
@@ -96,7 +101,7 @@ public class AlphaBetaAI implements ChessAI {
 					}
 				} else {
 					visitedStates++;
-					minMove = minValue(position, alpha, beta, depth + 1, maxDepth);
+					minMove = minValue(position, new MoveWrapper((short) 0, Integer.MAX_VALUE), alpha, beta, depth + 1, maxDepth);
 					
 					if (minMove.utility <= alpha) {
 						transTable.put(position.hashCode(), new TableNode(minMove.utility, depth, ScoreType.UPPER));
@@ -133,13 +138,14 @@ public class AlphaBetaAI implements ChessAI {
 		return bestMax;
 	}
 	
-	public MoveWrapper minValue(Position position, int alpha, int beta, int depth, int maxDepth) {
+	public MoveWrapper minValue(Position position, MoveWrapper bestMove, int alpha, int beta, int depth, int maxDepth) {
 		if (position.isTerminal() || depth == maxDepth) {
 			return new MoveWrapper(position.getLastShortMove(), getUtility(position, depth));
 		}
 		
-		MoveWrapper bestMin = new MoveWrapper((short) 0, Integer.MAX_VALUE);
+		MoveWrapper bestMin = new MoveWrapper(bestMove.move, bestMove.utility);
 		short[] moves = position.getAllMoves();
+		sortMoves(moves);
 		for (short move : moves) {
 			try {
 				position.doMove(move);
@@ -153,7 +159,7 @@ public class AlphaBetaAI implements ChessAI {
 						maxMove = new MoveWrapper(move, prevScore);
 					} else {
 						visitedStates++;
-						maxMove = maxValue(position, alpha, beta, depth + 1, maxDepth);
+						maxMove = maxValue(position, new MoveWrapper((short) 0, Integer.MIN_VALUE), alpha, beta, depth + 1, maxDepth);
 						
 						if (maxMove.utility <= alpha) {
 							transTable.put(position.hashCode(), new TableNode(maxMove.utility, maxDepth - depth, ScoreType.UPPER));
@@ -165,7 +171,7 @@ public class AlphaBetaAI implements ChessAI {
 					}
 				} else {
 					visitedStates++;
-					maxMove = maxValue(position, alpha, beta, depth + 1, maxDepth);
+					maxMove = maxValue(position, new MoveWrapper((short) 0, Integer.MIN_VALUE), alpha, beta, depth + 1, maxDepth);
 					
 					if (maxMove.utility <= alpha) {
 						transTable.put(position.hashCode(), new TableNode(maxMove.utility, depth, ScoreType.UPPER));
@@ -214,8 +220,6 @@ public class AlphaBetaAI implements ChessAI {
 			return 0;
 		} else {
 			// Cut off search early
-//			Random r =  new Random();
-//			return r.nextInt();
 			return evaluate(position, depth);
 		}
 		
@@ -227,6 +231,34 @@ public class AlphaBetaAI implements ChessAI {
 		} else {
 			return -1 * position.getMaterial() + (int) position.getDomination();
 		}
+	}
+	
+	public void sortMoves(short[] moves) {
+		Comparator<Short> moveComparator = new Comparator<Short>() {
+			public int compare(Short move1, Short move2) {
+				if (Move.isCapturing(move1) && !Move.isCapturing(move2)) {
+					return -1;
+				} else if (!Move.isCapturing(move1) && Move.isCapturing(move2)) {
+					return 1;
+				} else if (Move.isPromotion(move1) && !Move.isPromotion(move2)) {
+					return -1;
+				} else if (!Move.isPromotion(move1) && Move.isPromotion(move2)) {
+					return 1;
+				} else {
+					return 0;
+				}
+			}
+		};
+		
+		// Cast all short primitives to Short objects in order to use comparator for sorting
+		// Primitive short[] array does not autobox into Short[] array
+		Short[] shortMoves = new Short[moves.length];
+		IntStream.range(0, shortMoves.length).forEach(i -> shortMoves[i] = new Short(moves[i]));
+		
+		Arrays.sort(shortMoves, moveComparator);
+		
+		// Cast all Short objects back into short primitives
+		IntStream.range(0, moves.length).forEach(i -> moves[i] = shortMoves[i]);
 	}
 	
 	public void printStats() {

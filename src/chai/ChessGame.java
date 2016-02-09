@@ -14,8 +14,8 @@ public class ChessGame {
 
 	public ChessGame() {
 		// Original full game
-		position = new Position(
-				"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+//		position = new Position(
+//				"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 		// Black wins in 3
 //		position = new Position(
 //				"r5k1/p3Qpbp/2p3p1/1p6/q3bN2/6PP/PP3P2/K2RR3 b - - 0 1");
@@ -25,6 +25,13 @@ public class ChessGame {
 		// Black wins in 3
 //		position = new Position(
 //				"8/4B2p/7n/4pqpk/P2n1b2/R3P2P/2r3P1/1Q3R1K b - - 0 1");
+		// Black wins in 3
+//		position = new Position(
+//				"2kr3r/1bbp1p2/p3pp2/1p4q1/4P3/PNN1PBP1/1PP3KP/1R1Q1R2 b - - 0 1");
+		// Black wins in 3
+		position = new Position(
+				"5rk1/p4ppp/2b2q1P/7B/4p1Q1/5PR1/PPPb2R1/1K6 b - - 0 1");
+		
 
 	}
 
